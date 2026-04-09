@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker --version)",
+      "Read(//home/yago/Área de trabalho/fin/**)",
+      "Bash(ps -p 3862 -o cmd=)",
+      "Bash(ps -p 170324 -o cmd=)",
+      "Bash(ngrok version:*)",
+      "Bash(cloudflared version:*)",
+      "Bash(curl -s --max-time 3 https://ifconfig.me)",
+      "Bash(gh --version)"
+    ]
+  }
+}

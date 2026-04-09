@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  password     String
+  name         String
+  salary       Float    @default(0)
+  savingsGoal  Float    @default(20)
+  safetyAmount Float    @default(500)
+  paymentDay   Int      @default(5)
+  currency     String   @default("BRL")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  transactions  Transaction[]
+  refreshTokens RefreshToken[]
+  notifications Notification[]
+  accessLogs    AccessLog[]
+
+  @@map("users")
+}
+
+model Transaction {
+  id                String          @id @default(cuid())
+  userId            String
+  name              String
+  amount            Float
+  type              TransactionType
+  category          String?
+  tags              String[]        @default([])
+  notes             String?
+  date              DateTime        @default(now())
+  referenceMonth    Int
+  referenceYear     Int
+  isFixed           Boolean         @default(false)
+  installments      Int?
+  installmentNumber Int?
+  parentId          String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   Transaction?  @relation("RecurringParent", fields: [parentId], references: [id])
+  children Transaction[] @relation("RecurringParent")
+
+  @@index([userId, referenceMonth, referenceYear])
+  @@index([userId, date])
+  @@map("transactions")
+}
+
+enum TransactionType {
+  DEBIT
+  PIX
+  CREDIT
+  INSTALLMENT
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  LOW_BALANCE
+  DAILY_LIMIT
+  BILL_REMINDER
+  SAVING_GOAL
+  SYSTEM
+}
+
+model AccessLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("access_logs")
+}

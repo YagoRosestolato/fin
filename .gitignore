@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+
+# next
+.next/
+out/
+
+# build
+dist/
+build/
+
+# env
+.env*
+backend/.env
+
+# logs
+*.log
+
+# system
+.DS_Store
+Thumbs.db
+
+# editor
+.vscode/
+.idea/
+
+# typescript
+*.tsbuildinfo
