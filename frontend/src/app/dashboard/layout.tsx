@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import { Navbar } from '@/components/layout/Navbar';
@@ -8,18 +8,22 @@ import { TransactionModal } from '@/components/transactions/TransactionModal';
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, fetchProfile, user } = useAuthStore();
   const router = useRouter();
+  const profileFetched = useRef(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace('/auth/login');
       return;
     }
-    fetchProfile();
+    if (!profileFetched.current) {
+      profileFetched.current = true;
+      fetchProfile();
+    }
   }, [isAuthenticated, fetchProfile, router]);
 
-  // Se perfil carregado e salário = 0 (nunca configurado), manda para onboarding
+  // Só redireciona para onboarding se o perfil já carregou e salário nunca foi configurado
   useEffect(() => {
-    if (user && user.salary === 0) {
+    if (user && user.salary === 0 && profileFetched.current) {
       router.replace('/onboarding');
     }
   }, [user, router]);

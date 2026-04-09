@@ -94,7 +94,8 @@ export default function OnboardingPage() {
     try {
       const res = await userApi.updateProfile(data);
       updateUser(res.data.data);
-      router.push('/dashboard');
+      // replace evita voltar pro onboarding ao apertar voltar
+      router.replace('/dashboard');
     } catch {
       setSaving(false);
     }
