@@ -10,15 +10,13 @@ const logger = createLogger({
   ),
   transports: [
     new transports.Console({
-      format: combine(
-        colorize(),
-        simple()
-      ),
+      format: combine(colorize(), simple()),
     }),
   ],
 });
 
-if (process.env.NODE_ENV === 'production') {
+// Arquivos de log apenas em servidor dedicado (não em serverless/Vercel)
+if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
   logger.add(new transports.File({ filename: 'logs/error.log', level: 'error' }));
   logger.add(new transports.File({ filename: 'logs/combined.log' }));
 }
