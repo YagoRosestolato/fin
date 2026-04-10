@@ -8,7 +8,22 @@
       "Bash(ngrok version:*)",
       "Bash(cloudflared version:*)",
       "Bash(curl -s --max-time 3 https://ifconfig.me)",
-      "Bash(gh --version)"
+      "Bash(gh --version)",
+      "Bash(curl -s --max-time 8 \"https://fin-ohs2lf0cf-yagorosestolatos-projects-4600ac93.vercel.app/api/health\")",
+      "Bash(curl -s --max-time 8 \"https://fin-ohs2lf0cf-yagorosestolatos-projects-4600ac93.vercel.app/\")",
+      "Bash(curl -sv --max-time 8 \"https://fin-virid-seven.vercel.app/api/health\")",
+      "Bash(curl -s --max-time 8 \"https://fin-virid-seven.vercel.app/api/health\")",
+      "Bash(curl -s --max-time 10 \"https://fin-virid-seven.vercel.app/api/health\")",
+      "Bash(curl -s --max-time 10 \"https://fin-ym8a.vercel.app/\")",
+      "Bash(curl -si --max-time 10 \"https://fin-virid-seven.vercel.app/api/health\")",
+      "Bash(curl -s --max-time 10 \"https://fin-ckdm4pdbe-yagorosestolatos-projects-4600ac93.vercel.app/api/health\")",
+      "Bash(npm install:*)",
+      "Bash(sudo npm:*)",
+      "Bash(curl -s --max-time 10 -X POST \"https://fin-virid-seven.vercel.app/api/auth/login\" -H \"Content-Type: application/json\" -d '{\"email\":\"demo@fin.app\",\"password\":\"Demo@1234\"}')",
+      "Bash(node -e ':*)",
+      "Bash(python3 -c \"from PIL import Image; print\\('PIL ok'\\)\")",
+      "Bash(python3 -c \"import struct, zlib; print\\('stdlib ok'\\)\")",
+      "Bash(python3)"
     ]
   }
 }

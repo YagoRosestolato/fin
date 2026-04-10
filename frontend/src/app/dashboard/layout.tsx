@@ -21,7 +21,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [isAuthenticated, fetchProfile, router]);
 
-  // Só redireciona para onboarding se o perfil já carregou e salário nunca foi configurado
   useEffect(() => {
     if (user && user.salary === 0 && profileFetched.current) {
       router.replace('/onboarding');
@@ -32,8 +31,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-dvh bg-surface-DEFAULT">
-      {children}
       <Navbar />
+      {/* desktop: margem esquerda da sidebar | mobile: sem margem */}
+      <main className="lg:ml-60">
+        {children}
+      </main>
       <TransactionModal />
     </div>
   );

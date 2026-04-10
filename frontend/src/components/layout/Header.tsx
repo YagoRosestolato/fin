@@ -3,7 +3,6 @@ import { useAuthStore } from '@/stores/auth.store';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useUIStore } from '@/stores/ui.store';
-import { Select } from '@/components/ui/Select';
 import { MONTH_NAMES } from '@/lib/utils';
 
 interface HeaderProps {
@@ -23,12 +22,12 @@ export function Header({ title, showMonthPicker, showAddButton }: HeaderProps) {
   });
 
   return (
-    <header className="sticky top-0 z-30 bg-surface-DEFAULT/80 backdrop-blur-md border-b border-white/5 px-4 py-3">
-      <div className="flex items-center justify-between max-w-lg mx-auto">
+    <header className="sticky top-0 z-30 bg-surface-DEFAULT/90 backdrop-blur-md border-b border-white/5 px-4 py-3">
+      <div className="flex items-center justify-between max-w-5xl mx-auto">
         <div>
           <h1 className="text-lg font-bold text-gray-100">{title}</h1>
           {user && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 hidden sm:block">
               Olá, {user.name.split(' ')[0]}
             </p>
           )}
@@ -58,7 +57,8 @@ export function Header({ title, showMonthPicker, showAddButton }: HeaderProps) {
           )}
           {showAddButton && (
             <Button size="sm" onClick={openAdd} className="gap-1.5">
-              <Plus size={16} /> Novo
+              <Plus size={16} /> <span className="hidden sm:inline">Novo gasto</span>
+              <span className="sm:hidden">Novo</span>
             </Button>
           )}
         </div>
