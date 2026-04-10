@@ -112,13 +112,13 @@ function OverviewGrid({ summary }: { summary: FinancialSummary }) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.06 }}
-            className={`rounded-2xl bg-gradient-to-br ${c.bg} to-transparent border border-white/5 p-4`}
+            className={`rounded-2xl bg-gradient-to-br ${c.bg} to-transparent border border-white/5 p-4 min-h-[90px]`}
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-gray-400 leading-tight">{c.label}</span>
               <c.icon size={15} className={c.color} />
             </div>
-            <p className={`text-lg font-bold font-mono ${c.color} leading-none`}>
+            <p className={`text-sm sm:text-base font-bold font-mono ${c.color} leading-tight break-all`}>
               {formatCurrency(c.value)}
             </p>
             {c.sub && <p className="text-xs text-gray-500 mt-1">{c.sub}</p>}

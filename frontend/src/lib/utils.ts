@@ -5,11 +5,12 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(value: number, currency = 'BRL'): string {
-  return new Intl.NumberFormat('pt-BR', {
+  const formatted = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,
-  }).format(value);
+  }).format(Math.abs(value));
+  return value < 0 ? `-${formatted}` : formatted;
 }
 
 export function formatDate(date: string | Date): string {
