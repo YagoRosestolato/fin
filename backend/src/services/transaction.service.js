@@ -25,23 +25,40 @@ const autoCategorizeName = (name) => {
 };
 
 const create = async (userId, data) => {
-  const { name, amount, type, category, tags, notes, date, referenceMonth, referenceYear, isFixed, installments } = data;
+  const { name, amount, type, category, tags, notes, date, referenceMonth, referenceYear, isFixed, installments, paidInstallments } = data;
 
   const autoCategory = category || autoCategorizeName(name);
   const txDate = date ? new Date(date) : new Date();
 
   if (type === 'INSTALLMENT' && installments && installments > 1) {
+    const paid = paidInstallments && paidInstallments > 0 ? parseInt(paidInstallments) : 0;
+    const startNumber = paid + 1; // first installment to actually create
+
+    // If all installments are already paid, just record one entry
+    if (startNumber > installments) {
+      return prisma.transaction.create({
+        data: {
+          userId, name: `${name} (${installments}/${installments})`, amount, type,
+          category: autoCategory, tags: tags || [], notes,
+          date: txDate, referenceMonth, referenceYear, isFixed: false,
+          installments, installmentNumber: installments,
+        },
+      });
+    }
+
     const parent = await prisma.transaction.create({
       data: {
-        userId, name, amount, type, category: autoCategory, tags, notes,
+        userId,
+        name: `${name} (${startNumber}/${installments})`,
+        amount, type, category: autoCategory, tags: tags || [], notes,
         date: txDate, referenceMonth, referenceYear, isFixed: false,
-        installments, installmentNumber: 1,
+        installments, installmentNumber: startNumber,
       },
     });
 
     const children = [];
-    for (let i = 2; i <= installments; i++) {
-      const nextDate = addMonths(txDate, i - 1);
+    for (let i = startNumber + 1; i <= installments; i++) {
+      const nextDate = addMonths(txDate, i - startNumber);
       children.push({
         userId,
         name: `${name} (${i}/${installments})`,
@@ -60,11 +77,9 @@ const create = async (userId, data) => {
       });
     }
 
-    await prisma.transaction.createMany({ data: children });
-    await prisma.transaction.update({
-      where: { id: parent.id },
-      data: { name: `${name} (1/${installments})` },
-    });
+    if (children.length > 0) {
+      await prisma.transaction.createMany({ data: children });
+    }
 
     return parent;
   }

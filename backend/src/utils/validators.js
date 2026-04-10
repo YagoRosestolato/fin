@@ -30,6 +30,7 @@ const transactionSchema = z.object({
   referenceYear: z.coerce.number().min(2020).max(2100),
   isFixed: z.boolean().optional().default(false),
   installments: z.coerce.number().min(1).max(120).optional(),
+  paidInstallments: z.coerce.number().min(0).max(119).optional().default(0),
 });
 
 const updateUserSchema = z.object({
