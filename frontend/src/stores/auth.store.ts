@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { User } from '@/types';
-import { authApi, userApi } from '@/lib/api';
+import { authApi, userApi, api } from '@/lib/api';
 
 interface AuthState {
   user: User | null;
+  accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -12,20 +13,35 @@ interface AuthState {
   logout: () => Promise<void>;
   fetchProfile: () => Promise<void>;
   updateUser: (data: Partial<User>) => void;
+  setToken: (token: string | null) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
+      accessToken: null,
       isAuthenticated: false,
       isLoading: false,
+
+      setToken: (token) => {
+        if (token) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        } else {
+          delete api.defaults.headers.common['Authorization'];
+        }
+        set({ accessToken: token });
+      },
 
       login: async (email, password) => {
         set({ isLoading: true });
         try {
           const res = await authApi.login({ email, password });
-          set({ user: res.data.user, isAuthenticated: true, isLoading: false });
+          const { user, accessToken } = res.data;
+          if (accessToken) {
+            api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+          }
+          set({ user, accessToken, isAuthenticated: true, isLoading: false });
         } catch (err) {
           set({ isLoading: false });
           throw err;
@@ -36,7 +52,11 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           const res = await authApi.register(data);
-          set({ user: res.data.user, isAuthenticated: true, isLoading: false });
+          const { user, accessToken } = res.data;
+          if (accessToken) {
+            api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+          }
+          set({ user, accessToken, isAuthenticated: true, isLoading: false });
         } catch (err) {
           set({ isLoading: false });
           throw err;
@@ -47,7 +67,8 @@ export const useAuthStore = create<AuthState>()(
         try {
           await authApi.logout();
         } catch {}
-        set({ user: null, isAuthenticated: false });
+        delete api.defaults.headers.common['Authorization'];
+        set({ user: null, accessToken: null, isAuthenticated: false });
       },
 
       fetchProfile: async () => {
@@ -55,7 +76,7 @@ export const useAuthStore = create<AuthState>()(
           const res = await userApi.getProfile();
           set({ user: res.data.data, isAuthenticated: true });
         } catch {
-          set({ user: null, isAuthenticated: false });
+          set({ user: null, accessToken: null, isAuthenticated: false });
         }
       },
 
@@ -66,8 +87,18 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'fin-auth',
-      storage: createJSONStorage(() => sessionStorage),
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        user: state.user,
+        accessToken: state.accessToken,
+        isAuthenticated: state.isAuthenticated,
+      }),
+      onRehydrateStorage: () => (state) => {
+        // Restaura o token no header do axios ao recarregar a página
+        if (state?.accessToken) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${state.accessToken}`;
+        }
+      },
     }
   )
 );

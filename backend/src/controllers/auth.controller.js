@@ -1,10 +1,11 @@
 const authService = require('../services/auth.service');
 const config = require('../config');
 
+// Em produção com domínios diferentes (Vercel), cookies cross-site precisam de none+secure
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: config.nodeEnv === 'production',
-  sameSite: config.nodeEnv === 'production' ? 'strict' : 'lax',
+  sameSite: config.nodeEnv === 'production' ? 'none' : 'lax',
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 

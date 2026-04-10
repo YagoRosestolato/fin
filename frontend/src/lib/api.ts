@@ -25,29 +25,37 @@ api.interceptors.response.use(
     const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     if (error.response?.status === 401 && !original._retry) {
-      if ((error.response.data as { code?: string })?.code === 'TOKEN_EXPIRED') {
-        if (isRefreshing) {
-          return new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
-          }).then(() => api(original));
-        }
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(() => api(original));
+      }
 
-        original._retry = true;
-        isRefreshing = true;
+      original._retry = true;
+      isRefreshing = true;
 
-        try {
-          await api.post('/auth/refresh');
-          processQueue(null);
-          return api(original);
-        } catch (refreshError) {
-          processQueue(refreshError, null);
-          if (typeof window !== 'undefined') {
-            window.location.href = '/auth/login';
-          }
-          return Promise.reject(refreshError);
-        } finally {
-          isRefreshing = false;
+      try {
+        const res = await api.post('/auth/refresh');
+        const newToken = res.data?.accessToken;
+        if (newToken) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+          // Atualiza no store também
+          try {
+            const { useAuthStore } = await import('@/stores/auth.store');
+            useAuthStore.getState().setToken(newToken);
+          } catch {}
         }
+        processQueue(null, newToken);
+        return api(original);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('fin-auth');
+          window.location.href = '/auth/login';
+        }
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 
