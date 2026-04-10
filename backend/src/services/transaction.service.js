@@ -148,7 +148,24 @@ const findById = async (id, userId) => {
 
 const update = async (id, userId, data) => {
   await findById(id, userId);
-  return prisma.transaction.update({ where: { id }, data });
+
+  // Monta apenas os campos editáveis — nunca passa id/userId/createdAt ao Prisma
+  const updateData = {};
+  if (data.name !== undefined)            updateData.name = data.name;
+  if (data.amount !== undefined)          updateData.amount = parseFloat(data.amount);
+  if (data.type !== undefined)            updateData.type = data.type;
+  if (data.category !== undefined)        updateData.category = data.category || null;
+  if (data.tags !== undefined)            updateData.tags = data.tags || [];
+  if (data.notes !== undefined)           updateData.notes = data.notes || null;
+  if (data.isFixed !== undefined)         updateData.isFixed = data.isFixed;
+  if (data.referenceMonth !== undefined)  updateData.referenceMonth = parseInt(data.referenceMonth);
+  if (data.referenceYear !== undefined)   updateData.referenceYear = parseInt(data.referenceYear);
+  if (data.installments !== undefined)    updateData.installments = data.installments ? parseInt(data.installments) : null;
+  if (data.date !== undefined && data.date) {
+    updateData.date = new Date(data.date);
+  }
+
+  return prisma.transaction.update({ where: { id }, data: updateData });
 };
 
 const remove = async (id, userId, deleteAll = false) => {
