@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -29,30 +29,36 @@ interface Props {
 export function MonthlyConfigModal({ isOpen, onClose, month, year, existing }: Props) {
   const user = useAuthStore(s => s.user);
   const upsert = useUpsertMonthlyConfig();
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  const defaults = () => ({
+    salary: existing?.salary ?? (user?.salary && user.salary > 0 ? user.salary : undefined),
+    savingsGoal: existing?.savingsGoal ?? user?.savingsGoal ?? 20,
+    paymentDay: existing?.paymentDay ?? user?.paymentDay ?? 5,
+  });
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      salary: existing?.salary ?? user?.salary ?? 0,
-      savingsGoal: existing?.savingsGoal ?? user?.savingsGoal ?? 20,
-      paymentDay: existing?.paymentDay ?? user?.paymentDay ?? 5,
-    },
+    defaultValues: defaults(),
   });
 
-  // Reset form when existing data arrives or modal opens
   useEffect(() => {
     if (isOpen) {
-      reset({
-        salary: existing?.salary ?? user?.salary ?? 0,
-        savingsGoal: existing?.savingsGoal ?? user?.savingsGoal ?? 20,
-        paymentDay: existing?.paymentDay ?? user?.paymentDay ?? 5,
-      });
+      setApiError(null);
+      reset(defaults());
     }
-  }, [isOpen, existing, user, reset]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, existing, user]);
 
   const onSubmit = async (data: FormData) => {
-    await upsert.mutateAsync({ month, year, ...data });
-    onClose();
+    setApiError(null);
+    try {
+      await upsert.mutateAsync({ month, year, ...data });
+      onClose();
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setApiError(msg || 'Erro ao salvar. Tente novamente.');
+    }
   };
 
   const monthName = MONTH_NAMES[month - 1];
@@ -60,7 +66,7 @@ export function MonthlyConfigModal({ isOpen, onClose, month, year, existing }: P
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`${monthName} ${year}`} size="sm">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-brand-500/10 border border-brand-500/20 mb-2">
+        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-brand-500/10 border border-brand-500/20">
           <Wallet size={15} className="text-brand-400 flex-shrink-0" />
           <p className="text-xs text-gray-400">
             Configure quanto você recebeu e quer guardar neste mês.
@@ -96,6 +102,12 @@ export function MonthlyConfigModal({ isOpen, onClose, month, year, existing }: P
           error={errors.paymentDay?.message}
           {...register('paymentDay')}
         />
+
+        {apiError && (
+          <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">
+            {apiError}
+          </p>
+        )}
 
         <div className="flex gap-3 pt-1">
           <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
