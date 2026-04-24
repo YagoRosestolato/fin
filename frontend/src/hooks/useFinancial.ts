@@ -29,7 +29,6 @@ export const useUpsertMonthlyConfig = () => {
     mutationFn: (data: { month: number; year: number; salary: number; savingsGoal: number; paymentDay: number }) =>
       userApi.upsertMonthlyConfig(data),
     onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['monthly-config', vars.year, vars.month] });
       queryClient.invalidateQueries({ queryKey: ['summary', vars.month, vars.year] });
       queryClient.invalidateQueries({ queryKey: ['savings-history'] });
     },

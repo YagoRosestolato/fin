@@ -8,7 +8,7 @@ const withPWA = require('next-pwa')({
       urlPattern: /^https?.*/,
       handler: 'NetworkFirst',
       options: {
-        cacheName: 'offlineCache',
+        cacheName: 'offlineCache-v2',
         expiration: { maxEntries: 200 },
       },
     },
