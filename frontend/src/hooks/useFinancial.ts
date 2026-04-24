@@ -33,6 +33,7 @@ export const useMonthlyConfig = (year: number, month: number) => {
         salary: number; savingsGoal: number; paymentDay: number;
       } | null;
     },
+    enabled: !!year && !!month,
     staleTime: 1000 * 60 * 5,
   });
 };

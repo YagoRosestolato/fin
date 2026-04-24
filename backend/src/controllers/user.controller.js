@@ -70,8 +70,11 @@ const upsertMonthlyConfig = async (req, res, next) => {
 
 const getMonthlyConfig = async (req, res, next) => {
   try {
-    const month = parseInt(req.params.month);
-    const year = parseInt(req.params.year);
+    const month = parseInt(req.query.month);
+    const year = parseInt(req.query.year);
+    if (!month || !year) {
+      return res.status(400).json({ success: false, message: 'month e year são obrigatórios' });
+    }
     const config = await financialService.getMonthlyConfig(req.user.id, month, year);
     res.json({ success: true, data: config || null });
   } catch (err) {
