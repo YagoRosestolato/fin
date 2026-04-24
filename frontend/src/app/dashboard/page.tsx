@@ -1,15 +1,17 @@
 'use client';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Wallet, TrendingDown, PiggyBank, CalendarDays,
-  Shield, Zap, Plus, ArrowRight,
+  Shield, Zap, Plus, ArrowRight, Settings2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { CategoryDonutChart } from '@/components/charts/CategoryDonutChart';
 import { TransactionList } from '@/components/transactions/TransactionList';
 import { ProgressBar } from '@/components/ui/ProgressBar';
-import { useSummary } from '@/hooks/useFinancial';
+import { MonthlyConfigModal } from '@/components/MonthlyConfigModal';
+import { useSummary, useMonthlyConfig } from '@/hooks/useFinancial';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useUIStore } from '@/stores/ui.store';
 import { useAuthStore } from '@/stores/auth.store';
@@ -18,7 +20,9 @@ import { FinancialSummary } from '@/types';
 
 export default function DashboardPage() {
   const { selectedMonth, selectedYear } = useUIStore();
+  const [configOpen, setConfigOpen] = useState(false);
   const { data: summary, isLoading: summaryLoading } = useSummary(selectedMonth, selectedYear);
+  const { data: monthlyConfig } = useMonthlyConfig(selectedYear, selectedMonth);
   const { data: txData, isLoading: txLoading } = useTransactions({
     month: selectedMonth,
     year: selectedYear,
@@ -30,34 +34,70 @@ export default function DashboardPage() {
       <Header title="Fin" showMonthPicker showAddButton />
 
       <div className="max-w-5xl mx-auto px-4 pt-4 space-y-4">
-        {summaryLoading ? <DashboardSkeleton /> : summary ? (
+        {summaryLoading ? <DashboardSkeleton /> : (
           <>
-            {/* Layout desktop: 2 colunas | mobile: 1 coluna */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Banner: mês não configurado */}
+            {summary && !summary.hasMonthlyConfig && (
+              <motion.button
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={() => setConfigOpen(true)}
+                className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-left hover:bg-amber-500/15 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Settings2 size={16} className="text-amber-400 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-300">Configure este mês</p>
+                    <p className="text-xs text-gray-500">Informe salário, % guardado e dia de pagamento</p>
+                  </div>
+                </div>
+                <ArrowRight size={14} className="text-amber-400 flex-shrink-0" />
+              </motion.button>
+            )}
 
-              {/* Coluna esquerda: resumo principal */}
-              <div className="lg:col-span-2 space-y-4">
-                <OverviewGrid summary={summary} />
-                <DailyBudgetBanner summary={summary} />
-                <CategoryDonutChart
-                  spendingByCategory={summary.spendingByCategory}
-                  totalSpent={summary.totalSpent}
-                />
+            {/* Botão editar config quando já existe */}
+            {summary?.hasMonthlyConfig && (
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setConfigOpen(true)}
+                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                >
+                  <Settings2 size={12} /> Editar configuração do mês
+                </button>
               </div>
+            )}
 
-              {/* Coluna direita: últimos gastos */}
-              <div className="space-y-4">
-                <RecentTransactions
-                  transactions={txData?.transactions || []}
-                  isLoading={txLoading}
-                />
+            {summary ? (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2 space-y-4">
+                  <OverviewGrid summary={summary} />
+                  <DailyBudgetBanner summary={summary} onConfigClick={() => setConfigOpen(true)} />
+                  <CategoryDonutChart
+                    spendingByCategory={summary.spendingByCategory}
+                    totalSpent={summary.totalSpent}
+                  />
+                </div>
+                <div className="space-y-4">
+                  <RecentTransactions
+                    transactions={txData?.transactions || []}
+                    isLoading={txLoading}
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <EmptyState />
+            )}
           </>
-        ) : (
-          <EmptyState />
         )}
       </div>
+
+      <MonthlyConfigModal
+        isOpen={configOpen}
+        onClose={() => setConfigOpen(false)}
+        month={selectedMonth}
+        year={selectedYear}
+        existing={monthlyConfig}
+      />
     </div>
   );
 }
@@ -158,8 +198,29 @@ function OverviewGrid({ summary }: { summary: FinancialSummary }) {
 }
 
 /* ── Daily Budget Banner ────────────────────────── */
-function DailyBudgetBanner({ summary }: { summary: FinancialSummary }) {
+function DailyBudgetBanner({ summary, onConfigClick }: { summary: FinancialSummary; onConfigClick: () => void }) {
   const { openAddTransaction } = useUIStore();
+
+  if (!summary.hasMonthlyConfig) {
+    return (
+      <motion.button
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        onClick={onConfigClick}
+        className="w-full relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-brand-500/10 via-brand-600/5 to-transparent border border-brand-500/20 text-left"
+      >
+        <div className="flex items-center gap-3">
+          <Zap size={16} className="text-brand-400 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-gray-300">Método diário indisponível</p>
+            <p className="text-xs text-gray-500">Configure o mês para ver seu orçamento diário</p>
+          </div>
+          <ArrowRight size={14} className="text-brand-400 ml-auto flex-shrink-0" />
+        </div>
+      </motion.button>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.97 }}

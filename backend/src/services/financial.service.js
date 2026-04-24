@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
-const { differenceInDays, getDaysInMonth, startOfDay, endOfDay, setDate } = require('date-fns');
+const { getDaysInMonth } = require('date-fns');
 
 const prisma = new PrismaClient();
 
@@ -7,14 +7,24 @@ const getFinancialSummary = async (userId, month, year) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw Object.assign(new Error('Usuário não encontrado'), { status: 404 });
 
+  // Use monthly config if the user has filled it in for this month
+  const monthlyConfig = await prisma.monthlyConfig.findUnique({
+    where: { userId_month_year: { userId, month, year } },
+  });
+
+  const hasMonthlyConfig = !!monthlyConfig;
+  const salary = monthlyConfig ? monthlyConfig.salary : 0;
+  const savingsGoal = monthlyConfig ? monthlyConfig.savingsGoal : user.savingsGoal;
+  const paymentDay = monthlyConfig ? monthlyConfig.paymentDay : user.paymentDay;
+  const savedAmount = hasMonthlyConfig ? (salary * savingsGoal) / 100 : 0;
+
   const transactions = await prisma.transaction.findMany({
     where: { userId, referenceMonth: month, referenceYear: year },
     orderBy: { date: 'desc' },
   });
 
   const totalSpent = transactions.reduce((sum, t) => sum + t.amount, 0);
-  const savedAmount = (user.salary * user.savingsGoal) / 100;
-  const availableBalance = user.salary - savedAmount - totalSpent;
+  const availableBalance = hasMonthlyConfig ? salary - savedAmount - totalSpent : -totalSpent;
 
   const now = new Date();
   const isCurrentMonth = now.getMonth() + 1 === month && now.getFullYear() === year;
@@ -22,15 +32,14 @@ const getFinancialSummary = async (userId, month, year) => {
   let dailyBudget = 0;
   let daysRemaining = 0;
 
-  if (isCurrentMonth) {
+  if (isCurrentMonth && hasMonthlyConfig) {
     const today = now.getDate();
-    const payDay = user.paymentDay;
 
-    if (today <= payDay) {
-      daysRemaining = payDay - today;
+    if (today <= paymentDay) {
+      daysRemaining = paymentDay - today;
     } else {
       const daysInMonth = getDaysInMonth(now);
-      daysRemaining = daysInMonth - today + payDay;
+      daysRemaining = daysInMonth - today + paymentDay;
     }
 
     if (daysRemaining > 0 && availableBalance > 0) {
@@ -50,43 +59,68 @@ const getFinancialSummary = async (userId, month, year) => {
   }, {});
 
   return {
-    salary: user.salary,
-    savingsGoal: user.savingsGoal,
+    salary,
+    savingsGoal,
     savedAmount,
     totalSpent,
     availableBalance,
     safetyAmount: user.safetyAmount,
-    isBelowSafety: availableBalance < user.safetyAmount,
+    isBelowSafety: hasMonthlyConfig && availableBalance < user.safetyAmount,
     dailyBudget,
     daysRemaining,
-    paymentDay: user.paymentDay,
+    paymentDay,
     spendingByCategory,
     spendingByType,
     transactionCount: transactions.length,
+    hasMonthlyConfig,
   };
 };
 
 const getMonthlySavingsHistory = async (userId) => {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-
-  const groups = await prisma.transaction.groupBy({
-    by: ['referenceYear', 'referenceMonth'],
+  // Only months where user explicitly configured their salary
+  const configs = await prisma.monthlyConfig.findMany({
     where: { userId },
-    _sum: { amount: true },
-    _count: { id: true },
-    orderBy: [{ referenceYear: 'asc' }, { referenceMonth: 'asc' }],
+    orderBy: [{ year: 'asc' }, { month: 'asc' }],
   });
 
-  const savedPerMonth = (user.salary * user.savingsGoal) / 100;
+  const results = await Promise.all(configs.map(async (cfg) => {
+    const agg = await prisma.transaction.aggregate({
+      where: { userId, referenceMonth: cfg.month, referenceYear: cfg.year },
+      _sum: { amount: true },
+      _count: { id: true },
+    });
 
-  return groups.map(g => ({
-    month: g.referenceMonth,
-    year: g.referenceYear,
-    totalSpent: g._sum.amount || 0,
-    transactionCount: g._count.id,
-    savedAmount: savedPerMonth,
-    balance: user.salary - savedPerMonth - (g._sum.amount || 0),
+    const totalSpent = agg._sum.amount || 0;
+    const savedAmount = (cfg.salary * cfg.savingsGoal) / 100;
+
+    return {
+      month: cfg.month,
+      year: cfg.year,
+      salary: cfg.salary,
+      savingsGoal: cfg.savingsGoal,
+      paymentDay: cfg.paymentDay,
+      totalSpent,
+      transactionCount: agg._count.id,
+      savedAmount,
+      balance: cfg.salary - savedAmount - totalSpent,
+    };
   }));
+
+  return results;
+};
+
+const upsertMonthlyConfig = async (userId, { month, year, salary, savingsGoal, paymentDay }) => {
+  return prisma.monthlyConfig.upsert({
+    where: { userId_month_year: { userId, month, year } },
+    create: { userId, month, year, salary, savingsGoal, paymentDay },
+    update: { salary, savingsGoal, paymentDay },
+  });
+};
+
+const getMonthlyConfig = async (userId, month, year) => {
+  return prisma.monthlyConfig.findUnique({
+    where: { userId_month_year: { userId, month, year } },
+  });
 };
 
 const getDailySpending = async (userId, month, year) => {
@@ -107,4 +141,4 @@ const getDailySpending = async (userId, month, year) => {
   return Object.values(byDay);
 };
 
-module.exports = { getFinancialSummary, getMonthlySavingsHistory, getDailySpending };
+module.exports = { getFinancialSummary, getMonthlySavingsHistory, getDailySpending, upsertMonthlyConfig, getMonthlyConfig };

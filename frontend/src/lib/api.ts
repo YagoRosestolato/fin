@@ -76,6 +76,8 @@ export const userApi = {
   getSummary: (params?: object) => api.get('/users/summary', { params }),
   getSavingsHistory: () => api.get('/users/savings-history'),
   getDailySpending: (params?: object) => api.get('/users/daily-spending', { params }),
+  upsertMonthlyConfig: (data: object) => api.post('/users/monthly-config', data),
+  getMonthlyConfig: (year: number, month: number) => api.get(`/users/monthly-config/${year}/${month}`),
   deleteAccount: () => api.delete('/users/account'),
 };
 

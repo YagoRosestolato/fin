@@ -52,6 +52,33 @@ const getDailySpending = async (req, res, next) => {
   }
 };
 
+const upsertMonthlyConfig = async (req, res, next) => {
+  try {
+    const { month, year, salary, savingsGoal, paymentDay } = req.body;
+    const config = await financialService.upsertMonthlyConfig(req.user.id, {
+      month: parseInt(month),
+      year: parseInt(year),
+      salary: parseFloat(salary),
+      savingsGoal: parseFloat(savingsGoal),
+      paymentDay: parseInt(paymentDay),
+    });
+    res.json({ success: true, data: config });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const getMonthlyConfig = async (req, res, next) => {
+  try {
+    const month = parseInt(req.params.month);
+    const year = parseInt(req.params.year);
+    const config = await financialService.getMonthlyConfig(req.user.id, month, year);
+    res.json({ success: true, data: config || null });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const deleteAccount = async (req, res, next) => {
   try {
     await userService.deleteAccount(req.user.id);
@@ -63,4 +90,4 @@ const deleteAccount = async (req, res, next) => {
   }
 };
 
-module.exports = { getProfile, updateProfile, getSummary, getSavingsHistory, getDailySpending, deleteAccount };
+module.exports = { getProfile, updateProfile, getSummary, getSavingsHistory, getDailySpending, upsertMonthlyConfig, getMonthlyConfig, deleteAccount };

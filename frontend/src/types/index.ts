@@ -46,11 +46,15 @@ export interface FinancialSummary {
   spendingByCategory: Record<string, number>;
   spendingByType: Record<string, number>;
   transactionCount: number;
+  hasMonthlyConfig: boolean;
 }
 
 export interface MonthlySaving {
   month: number;
   year: number;
+  salary: number;
+  savingsGoal: number;
+  paymentDay: number;
   totalSpent: number;
   transactionCount: number;
   savedAmount: number;

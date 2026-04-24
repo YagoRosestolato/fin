@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/lib/api';
 
 export const useSummary = (month?: number, year?: number) => {
@@ -20,6 +20,33 @@ export const useSavingsHistory = () => {
       return res.data.data;
     },
     staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useMonthlyConfig = (year: number, month: number) => {
+  return useQuery({
+    queryKey: ['monthly-config', year, month],
+    queryFn: async () => {
+      const res = await userApi.getMonthlyConfig(year, month);
+      return res.data.data as {
+        id: string; month: number; year: number;
+        salary: number; savingsGoal: number; paymentDay: number;
+      } | null;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useUpsertMonthlyConfig = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { month: number; year: number; salary: number; savingsGoal: number; paymentDay: number }) =>
+      userApi.upsertMonthlyConfig(data),
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['monthly-config', vars.year, vars.month] });
+      queryClient.invalidateQueries({ queryKey: ['summary', vars.month, vars.year] });
+      queryClient.invalidateQueries({ queryKey: ['savings-history'] });
+    },
   });
 };
 
