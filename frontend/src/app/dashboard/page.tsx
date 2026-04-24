@@ -11,7 +11,7 @@ import { CategoryDonutChart } from '@/components/charts/CategoryDonutChart';
 import { TransactionList } from '@/components/transactions/TransactionList';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { MonthlyConfigModal } from '@/components/MonthlyConfigModal';
-import { useSummary, useMonthlyConfig } from '@/hooks/useFinancial';
+import { useSummary } from '@/hooks/useFinancial';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useUIStore } from '@/stores/ui.store';
 import { useAuthStore } from '@/stores/auth.store';
@@ -22,7 +22,6 @@ export default function DashboardPage() {
   const { selectedMonth, selectedYear } = useUIStore();
   const [configOpen, setConfigOpen] = useState(false);
   const { data: summary, isLoading: summaryLoading } = useSummary(selectedMonth, selectedYear);
-  const { data: monthlyConfig } = useMonthlyConfig(selectedYear, selectedMonth);
   const { data: txData, isLoading: txLoading } = useTransactions({
     month: selectedMonth,
     year: selectedYear,
@@ -96,7 +95,7 @@ export default function DashboardPage() {
         onClose={() => setConfigOpen(false)}
         month={selectedMonth}
         year={selectedYear}
-        existing={monthlyConfig}
+        existing={summary?.monthlyConfig}
       />
     </div>
   );

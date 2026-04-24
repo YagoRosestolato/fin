@@ -12,7 +12,6 @@ router.get('/summary', ctrl.getSummary);
 router.get('/savings-history', ctrl.getSavingsHistory);
 router.get('/daily-spending', ctrl.getDailySpending);
 router.post('/monthly-config', ctrl.upsertMonthlyConfig);
-router.get('/monthly-config', ctrl.getMonthlyConfig);
 router.delete('/account', ctrl.deleteAccount);
 
 module.exports = router;

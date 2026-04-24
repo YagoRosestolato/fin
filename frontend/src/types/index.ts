@@ -47,6 +47,7 @@ export interface FinancialSummary {
   spendingByType: Record<string, number>;
   transactionCount: number;
   hasMonthlyConfig: boolean;
+  monthlyConfig: { salary: number; savingsGoal: number; paymentDay: number } | null;
 }
 
 export interface MonthlySaving {

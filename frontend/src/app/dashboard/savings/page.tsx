@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { SavingsChart } from '@/components/charts/SavingsChart';
 import { MonthlyConfigModal } from '@/components/MonthlyConfigModal';
-import { useSavingsHistory, useMonthlyConfig } from '@/hooks/useFinancial';
+import { useSavingsHistory } from '@/hooks/useFinancial';
 import { useUIStore } from '@/stores/ui.store';
 import { formatCurrency, MONTH_NAMES } from '@/lib/utils';
 import { MonthlySaving } from '@/types';
@@ -14,7 +14,6 @@ import { MonthlySaving } from '@/types';
 export default function SavingsPage() {
   const { data: history = [], isLoading } = useSavingsHistory();
   const { selectedMonth, selectedYear } = useUIStore();
-  const { data: currentConfig } = useMonthlyConfig(selectedYear, selectedMonth);
   const [configOpen, setConfigOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<{ month: number; year: number } | null>(null);
 
@@ -173,11 +172,10 @@ export default function SavingsPage() {
         onClose={() => setConfigOpen(false)}
         month={editTarget?.month ?? selectedMonth}
         year={editTarget?.year ?? selectedYear}
-        existing={editingEntry ? {
-          salary: editingEntry.salary,
-          savingsGoal: editingEntry.savingsGoal,
-          paymentDay: editingEntry.paymentDay,
-        } : currentConfig}
+        existing={editingEntry
+          ? { salary: editingEntry.salary, savingsGoal: editingEntry.savingsGoal, paymentDay: editingEntry.paymentDay }
+          : null
+        }
       />
     </div>
   );

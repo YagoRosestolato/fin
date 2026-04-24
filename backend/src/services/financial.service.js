@@ -73,6 +73,9 @@ const getFinancialSummary = async (userId, month, year) => {
     spendingByType,
     transactionCount: transactions.length,
     hasMonthlyConfig,
+    monthlyConfig: monthlyConfig
+      ? { salary: monthlyConfig.salary, savingsGoal: monthlyConfig.savingsGoal, paymentDay: monthlyConfig.paymentDay }
+      : null,
   };
 };
 

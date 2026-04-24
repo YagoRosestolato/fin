@@ -23,21 +23,6 @@ export const useSavingsHistory = () => {
   });
 };
 
-export const useMonthlyConfig = (year: number, month: number) => {
-  return useQuery({
-    queryKey: ['monthly-config', year, month],
-    queryFn: async () => {
-      const res = await userApi.getMonthlyConfig(year, month);
-      return res.data.data as {
-        id: string; month: number; year: number;
-        salary: number; savingsGoal: number; paymentDay: number;
-      } | null;
-    },
-    enabled: !!year && !!month,
-    staleTime: 1000 * 60 * 5,
-  });
-};
-
 export const useUpsertMonthlyConfig = () => {
   const queryClient = useQueryClient();
   return useMutation({
