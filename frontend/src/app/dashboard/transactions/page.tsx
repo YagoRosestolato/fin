@@ -68,6 +68,9 @@ export default function TransactionsPage() {
         <TransactionList
           transactions={data?.transactions || []}
           isLoading={isLoading}
+          draggable={!filters.search && !filters.type && !filters.category}
+          month={selectedMonth}
+          year={selectedYear}
         />
 
         {data?.pagination && data.pagination.pages > 1 && (

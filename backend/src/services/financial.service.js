@@ -35,14 +35,18 @@ const getFinancialSummary = async (userId, month, year) => {
   if (isCurrentMonth && hasMonthlyConfig) {
     const today = now.getDate();
 
-    if (today <= paymentDay) {
-      daysRemaining = paymentDay - today;
+    // dias restantes incluindo hoje até a véspera do pagamento
+    if (today < paymentDay) {
+      daysRemaining = paymentDay - today; // ex: hoje=20, pag=25 → 5 dias (20..24)
+    } else if (today === paymentDay) {
+      daysRemaining = 1; // hoje é dia do pagamento, ainda conta o dia
     } else {
       const daysInMonth = getDaysInMonth(now);
       daysRemaining = daysInMonth - today + paymentDay;
     }
 
-    if (daysRemaining > 0 && availableBalance > 0) {
+    if (daysRemaining > 0) {
+      // mostra negativo quando estourou o orçamento
       dailyBudget = availableBalance / daysRemaining;
     }
   }

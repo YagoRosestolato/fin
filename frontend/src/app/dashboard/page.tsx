@@ -220,29 +220,44 @@ function DailyBudgetBanner({ summary, onConfigClick }: { summary: FinancialSumma
     );
   }
 
+  const isOver = summary.dailyBudget < 0;
+  const bannerGradient = isOver
+    ? 'from-red-500/20 via-red-600/10 to-transparent border-red-500/20'
+    : 'from-brand-500/20 via-brand-600/10 to-transparent border-brand-500/20';
+  const glowColor = isOver ? 'bg-red-500/10' : 'bg-brand-500/10';
+  const valueColor = isOver ? 'text-red-400' : 'text-white';
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.97 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-brand-500/20 via-brand-600/10 to-transparent border border-brand-500/20"
+      className={`relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br ${bannerGradient} border`}
     >
-      <div className="absolute top-0 right-0 w-40 h-40 bg-brand-500/10 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl pointer-events-none" />
+      <div className={`absolute top-0 right-0 w-40 h-40 ${glowColor} rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl pointer-events-none`} />
       <div className="relative flex items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Zap size={14} className="text-brand-400" />
-            <span className="text-xs font-medium text-gray-400">Método diário</span>
+            <Zap size={14} className={isOver ? 'text-red-400' : 'text-brand-400'} />
+            <span className="text-xs font-medium text-gray-400">
+              {isOver ? 'Orçamento estourado' : 'Método diário'}
+            </span>
           </div>
-          <p className="text-3xl font-bold font-mono text-white">
+          <p className={`text-3xl font-bold font-mono ${valueColor} break-all`}>
             {formatCurrency(summary.dailyBudget)}
           </p>
           <p className="text-xs text-gray-500 mt-1">
-            disponível hoje · {summary.daysRemaining} dias até dia {summary.paymentDay}
+            {isOver
+              ? `${summary.daysRemaining} dias restantes até dia ${summary.paymentDay}`
+              : `disponível hoje · ${summary.daysRemaining} dias até dia ${summary.paymentDay}`}
           </p>
         </div>
         <button
           onClick={openAddTransaction}
-          className="flex-shrink-0 w-12 h-12 rounded-2xl bg-brand-500 hover:bg-brand-600 flex items-center justify-center transition-colors shadow-lg shadow-brand-500/30 active:scale-95"
+          className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-colors shadow-lg active:scale-95 ${
+            isOver
+              ? 'bg-red-500 hover:bg-red-600 shadow-red-500/30'
+              : 'bg-brand-500 hover:bg-brand-600 shadow-brand-500/30'
+          }`}
         >
           <Plus size={22} className="text-white" />
         </button>
