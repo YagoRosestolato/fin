@@ -43,6 +43,7 @@ model Transaction {
   referenceMonth    Int
   referenceYear     Int
   isFixed           Boolean         @default(false)
+  paid              Boolean         @default(false)
   installments      Int?
   installmentNumber Int?
   parentId          String?

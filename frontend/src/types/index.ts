@@ -26,6 +26,7 @@ export interface Transaction {
   referenceMonth: number;
   referenceYear: number;
   isFixed: boolean;
+  paid: boolean;
   installments: number | null;
   installmentNumber: number | null;
   parentId: string | null;

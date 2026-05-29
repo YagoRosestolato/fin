@@ -173,6 +173,7 @@ const update = async (id, userId, data) => {
   if (data.tags !== undefined)            updateData.tags = data.tags || [];
   if (data.notes !== undefined)           updateData.notes = data.notes || null;
   if (data.isFixed !== undefined)         updateData.isFixed = data.isFixed;
+  if (data.paid !== undefined)            updateData.paid = Boolean(data.paid);
   if (data.referenceMonth !== undefined)  updateData.referenceMonth = parseInt(data.referenceMonth);
   if (data.referenceYear !== undefined)   updateData.referenceYear = parseInt(data.referenceYear);
   if (data.installments !== undefined)    updateData.installments = data.installments ? parseInt(data.installments) : null;
