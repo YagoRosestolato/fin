@@ -5,14 +5,16 @@ import { PiggyBank, TrendingUp, Calendar, DollarSign, Plus } from 'lucide-react'
 import { Header } from '@/components/layout/Header';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { SavingsChart } from '@/components/charts/SavingsChart';
+import { MonthlySpendingChart } from '@/components/charts/MonthlySpendingChart';
 import { MonthlyConfigModal } from '@/components/MonthlyConfigModal';
-import { useSavingsHistory } from '@/hooks/useFinancial';
+import { useSavingsHistory, useMonthlySpendingChart } from '@/hooks/useFinancial';
 import { useUIStore } from '@/stores/ui.store';
 import { formatCurrency, MONTH_NAMES } from '@/lib/utils';
 import { MonthlySaving } from '@/types';
 
 export default function SavingsPage() {
   const { data: history = [], isLoading } = useSavingsHistory();
+  const { data: spendingChart = [] } = useMonthlySpendingChart();
   const { selectedMonth, selectedYear } = useUIStore();
   const [configOpen, setConfigOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<{ month: number; year: number } | null>(null);
@@ -89,6 +91,10 @@ export default function SavingsPage() {
         ) : history.length > 0 ? (
           <SavingsChart history={history} />
         ) : null}
+
+        {spendingChart.length > 0 && (
+          <MonthlySpendingChart data={spendingChart} />
+        )}
 
         {/* Monthly history */}
         <Card>

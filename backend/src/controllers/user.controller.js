@@ -82,6 +82,15 @@ const getMonthlyConfig = async (req, res, next) => {
   }
 };
 
+const getMonthlySpendingChart = async (req, res, next) => {
+  try {
+    const data = await financialService.getMonthlySpendingChart(req.user.id);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const deleteAccount = async (req, res, next) => {
   try {
     await userService.deleteAccount(req.user.id);
@@ -93,4 +102,4 @@ const deleteAccount = async (req, res, next) => {
   }
 };
 
-module.exports = { getProfile, updateProfile, getSummary, getSavingsHistory, getDailySpending, upsertMonthlyConfig, getMonthlyConfig, deleteAccount };
+module.exports = { getProfile, updateProfile, getSummary, getSavingsHistory, getDailySpending, upsertMonthlyConfig, getMonthlyConfig, getMonthlySpendingChart, deleteAccount };

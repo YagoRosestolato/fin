@@ -148,4 +148,21 @@ const getDailySpending = async (userId, month, year) => {
   return Object.values(byDay);
 };
 
-module.exports = { getFinancialSummary, getMonthlySavingsHistory, getDailySpending, upsertMonthlyConfig, getMonthlyConfig };
+const getMonthlySpendingChart = async (userId) => {
+  const rows = await prisma.transaction.groupBy({
+    by: ['referenceYear', 'referenceMonth'],
+    where: { userId },
+    _sum: { amount: true },
+    _count: { id: true },
+    orderBy: [{ referenceYear: 'asc' }, { referenceMonth: 'asc' }],
+  });
+
+  return rows.map(r => ({
+    month: r.referenceMonth,
+    year: r.referenceYear,
+    totalSpent: r._sum.amount || 0,
+    transactionCount: r._count.id,
+  }));
+};
+
+module.exports = { getFinancialSummary, getMonthlySavingsHistory, getDailySpending, upsertMonthlyConfig, getMonthlyConfig, getMonthlySpendingChart };

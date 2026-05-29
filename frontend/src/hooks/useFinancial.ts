@@ -35,6 +35,17 @@ export const useUpsertMonthlyConfig = () => {
   });
 };
 
+export const useMonthlySpendingChart = () => {
+  return useQuery({
+    queryKey: ['monthly-spending-chart'],
+    queryFn: async () => {
+      const res = await userApi.getMonthlySpendingChart();
+      return res.data.data as Array<{ month: number; year: number; totalSpent: number; transactionCount: number }>;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
 export const useDailySpending = (month?: number, year?: number) => {
   return useQuery({
     queryKey: ['daily-spending', month, year],
